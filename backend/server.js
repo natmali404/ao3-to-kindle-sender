@@ -6,6 +6,24 @@ import * as cheerio from "cheerio";
 import fs from "fs";
 import path from "path";
 
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+//nodemailer configuration
+dotenv.config();
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+//cors configuration
 const corsOptions = {
     origin: ["http://localhost:5173"]
 }
@@ -20,6 +38,7 @@ app.get("/", (request, response) => {
 
 
 const fanficLink = "https://archiveofourown.org/works/61755115/chapters/157874314"; //hard-coded for now; will be user-given later
+const kindleEmail = process.env.TEST_KINDLE_EMAIL //hard-coded for now; will be user-given later
 const downloadFolder = path.join(path.resolve(), 'downloads');
 
 
@@ -48,7 +67,7 @@ const getDownloadLink = async (url) => {
     }
 }
 
-
+//to add: auto remove from server
 const downloadFile = async (downloadLink, downloadPath) => {
     const writer = fs.createWriteStream(downloadPath);
     const response = await axios({ 
@@ -71,7 +90,54 @@ const downloadFile = async (downloadLink, downloadPath) => {
     });
 }
 
+//to add: handle multiple attachments later on
+const sendEmailWithAttachment = async (recipientEmail, filePath, fileName) => {
+    try {
+        // const mailOptions = {
+        //     from: process.env.EMAIL_USER,
+        //     to: recipientEmail,
+        //     subject: "AO3 to Kindle sender",
+        //     text: "",
+        //     attachments: [
+        //         {
+        //             filename: fileName,
+        //             path: filePath
+        //         }
+        //     ]
+        // }
 
+        // const info = await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail({
+            to: recipientEmail,
+            subject: "AO3 to Kindle sender",
+            text: "Successful mail.",
+            attachments: [
+                {
+                    filename: fileName,
+                    path: filePath
+                }
+            ]
+        })
+        console.log("Email sent: ", info.response);
+        return {success: true, message: "Email sent successfully!"};
+    } catch (error) {
+        console.log("Error sending email: ", error);
+        return {success: false, message: error.message};
+    }
+}
+
+const fsPromises = fs.promises;
+
+const removeDocument = async (filePath) => {
+    try {
+        await fsPromises.unlink(filePath);
+        console.log("File removed from the server.");
+    } catch (error) {
+        console.error("Error removing file:", error);
+    }
+}
+
+//to add: update user on status progress (websockets?)
 app.post("/execute", async (request, response) => {
     console.log("Attempting to get the download link from AO3...");
     try {
@@ -83,7 +149,15 @@ app.post("/execute", async (request, response) => {
         console.log(`Attempting download from ${downloadLink} to ${downloadPath}...`);
         await downloadFile(downloadLink, downloadPath);
         console.log("Download completed.")
-        response.json({ message: "File downloaded successfully!", fileName });
+        // response.json({ message: "File downloaded successfully!", fileName });
+        console.log("Sending email with attachment...");
+        const emailResult = await sendEmailWithAttachment(kindleEmail, downloadPath, fileName);
+        if (emailResult.success) {
+            removeDocument(downloadPath);
+            response.json({ message: "File downloaded and email sent successfully!" });
+        } else {
+            response.status(500).json({ message: "An error occurred: " + emailResult.message });
+        }
     } 
     catch (error) {
         console.error("Error:", error.message);
