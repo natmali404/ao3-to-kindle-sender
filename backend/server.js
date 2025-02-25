@@ -38,8 +38,8 @@ app.get("/", (request, response) => {
 })
 
 
-const fanficLink = "https://archiveofourown.org/works/61755115/chapters/157874314"; //hard-coded for now; will be user-given later
-const kindleEmail = process.env.TEST_KINDLE_EMAIL //hard-coded for now; will be user-given later
+// const fanficLink = "https://archiveofourown.org/works/61755115/chapters/157874314"; //hard-coded for now; will be user-given later
+// const kindleEmail = process.env.TEST_KINDLE_EMAIL //hard-coded for now; will be user-given later
 const downloadFolder = path.join(path.resolve(), 'downloads');
 
 
@@ -68,7 +68,12 @@ const getDownloadLink = async (url) => {
     }
 }
 
-//to add: auto remove from server
+
+const getFileName = (downloadLink) => {
+    return downloadLink.split("/").pop().split("?")[0];
+}
+
+
 const downloadFile = async (downloadLink, downloadPath) => {
     const writer = fs.createWriteStream(downloadPath);
     const response = await axios({ 
@@ -91,33 +96,18 @@ const downloadFile = async (downloadLink, downloadPath) => {
     });
 }
 
-//to add: handle multiple attachments later on
-const sendEmailWithAttachment = async (recipientEmail, filePath, fileName) => {
-    try {
-        // const mailOptions = {
-        //     from: process.env.EMAIL_USER,
-        //     to: recipientEmail,
-        //     subject: "AO3 to Kindle sender",
-        //     text: "",
-        //     attachments: [
-        //         {
-        //             filename: fileName,
-        //             path: filePath
-        //         }
-        //     ]
-        // }
 
-        // const info = await transporter.sendMail(mailOptions);
+const sendEmailWithAttachment = async (recipientEmail, attachments) => {
+    const attachmentsObject = Object.entries(attachments).map(([fileName, filePath]) => ({ //should there be a try?
+        filename: fileName,
+        path: filePath,
+    }));
+    try {
         const info = await transporter.sendMail({
             to: recipientEmail,
             subject: "AO3 to Kindle sender",
-            text: "Successful mail.",
-            attachments: [
-                {
-                    filename: fileName,
-                    path: filePath
-                }
-            ]
+            text: "Successful mail, enjoy reading!!",
+            attachments: attachmentsObject
         })
         console.log("Email sent: ", info.response);
         return {success: true, message: "Email sent successfully!"};
@@ -139,38 +129,61 @@ const removeDocument = async (filePath) => {
 }
 
 //to add: update user on status progress (websockets?)
-//to modify: process each link from given array
-
 app.post("/process", async (request, response) => {
     console.log(request.body);
-});
-
-app.post("/execute", async (request, response) => {
-    console.log("Attempting to get the download link from AO3...");
     try {
-        const downloadLink = await getDownloadLink(fanficLink);
-        const fileName = downloadLink.split("/").pop().split("?")[0];
-        console.log(`EPUB link: ${downloadLink}, file name: ${fileName}`);
-        //to add: logic to check if file already exists in downloads folder (if there will be enough time)
-        const downloadPath = path.join(downloadFolder, fileName);
-        console.log(`Attempting download from ${downloadLink} to ${downloadPath}...`);
-        await downloadFile(downloadLink, downloadPath);
-        console.log("Download completed.")
-        // response.json({ message: "File downloaded successfully!", fileName });
-        console.log("Sending email with attachment...");
-        const emailResult = await sendEmailWithAttachment(kindleEmail, downloadPath, fileName);
+        const { kindleEmail, fanficLinks } = request.body;
+        const attachments = {}
+
+        const totalLinkCount = fanficLinks.length;
+        let processedLinkCount = 0;
+        let errorLinkCount = 0;
+        // fanficLinks.forEach(async (link) => { //wrong
+        for (const link of fanficLinks) {
+            try{
+                console.log("Attempting to get the download link from AO3... - fic ", link);
+                let downloadLink = await getDownloadLink(link)
+                let fileName = getFileName(downloadLink)
+                const downloadPath = path.join(downloadFolder, fileName);
+                console.log(`Attempting download of ${fileName} from ${downloadLink} to ${downloadPath}...`);
+                await downloadFile(downloadLink, downloadPath);
+                attachments[fileName] = downloadPath;
+                processedLinkCount++;
+            } catch(error)
+            {
+                errorLinkCount++;
+            }
+            //if at any point in this code there is an error, it should move on to the next link.
+            
+        }
+        // each link has to be processed separately. if one fails, the rest should be processed
+        console.log(attachments)
+        console.log("Sending email with attachments...");
+        
+        const emailResult = await sendEmailWithAttachment(kindleEmail, attachments);
+    
         if (emailResult.success) {
-            removeDocument(downloadPath);
-            response.json({ message: "File downloaded and email sent successfully!" });
+            response.json({ message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.` });
         } else {
             response.status(500).json({ message: "An error occurred: " + emailResult.message });
         }
-    } 
-    catch (error) {
+        console.log("Removing files...")
+        // attachments.forEach((key, value) => {} //wrong
+        for (const filePath of Object.values(attachments)) {
+            removeDocument(filePath);
+        }
+
+
+        //for each link: get download link, download file. store a dict of filename>filepath.
+        //send one big email with every successfully downloaded file.
+        //iterate through the dict and remove every file from the server.
+    } catch (error) {
         console.error("Error:", error.message);
         response.status(500).json({ message: "An error occurred: " + error.message });
     }
- });
+    
+});
+
 
 
 app.listen(8080, () => {

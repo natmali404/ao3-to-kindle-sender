@@ -9,6 +9,7 @@ function UserForm({onButtonClick}) {
     const [links, setLinks] = useState([""])
     const [emailError, setEmailError] = useState(null);
     const [linkError, setLinkError] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     //validation: proper kindle e-mai + at least one proper ao3 link
     //without it the button is not active. button disabled after clicking and processing, until it returns a success message.
@@ -60,6 +61,19 @@ function UserForm({onButtonClick}) {
         setLinks(newLinks);
     }
 
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setLinks([...new Set(links)]);
+        if (!emailError && !linkError) {
+            setIsProcessing(true); // Set processing to true
+            try {
+                await onButtonClick(kindleEmail, links);
+            } finally {
+                setIsProcessing(false); // Set processing to false after request completes
+            }
+        }
+    };
+
     //i suppose because of this validation happens twice (from dependency array AND from the onChange events)?
     //if i skip the dependency array on purpose will it fix this issue?
     useEffect(() => {
@@ -68,7 +82,7 @@ function UserForm({onButtonClick}) {
     })
 
     return (
-        <form action="">
+        <form onSubmit={handleSubmit}>
             <div className='form-content-container'>
                 <p>Your <b>Kindle</b> e-mail:</p>
                 <input type="text" placeholder='john_smith_pSbNDS@kindle.com' onChange={handleEmailChange} />
@@ -87,17 +101,16 @@ function UserForm({onButtonClick}) {
                                 x
                             </button>
                         </div>
-                        
                     )
                 })}
                 </div>
                 <div className='add-input-button-container'>
-                    <button type="button" className='add-input-button' onClick={() => addInput()}>+</button>
+                    <button disabled={links.length >= 10} type="button" className='add-input-button' onClick={() => addInput()}>+</button>
                 </div>
-                <button disabled={emailError || linkError} type='submit' className='main-button' onClick={onButtonClick}>
-                    Test request
+                <button disabled={emailError || linkError || isProcessing} type='submit' className='main-button'>
+                {isProcessing ? 'Processing...' : 'Process links'}
                 </button>
-                <p>{emailError} {linkError}</p>
+                <p className="error-status">{emailError} {linkError}</p>
             </div>
         </form>
     )
