@@ -5,41 +5,76 @@ form {
 }
 
 .form-content-container > p {
-    margin: 0.5vh;
+    margin: 0.3vw;
 }
 
-.form-content-container > input {
+.form-content-container > input, .input-container > input {
     box-sizing: border-box;
     background-color: white;
     border-radius: 10px;
     border: 1px solid black;
-    padding: 1vh;
+    padding: 0.6vw;
     color: #201e22;
     width: 100%;
-    margin-bottom: 1.5vh;
+    margin-bottom: 1vw;
 }
 
-.form-content-container > input:last-of-type {
+.fic-links-container .input-container:last-child input {
     border-radius: 10px 10px 0 10px;
-    margin-bottom: 0.5vh;
+    margin-bottom: 0.2vw;
 }
 
-.form-content-container > input::placeholder {
+.form-content-container > input::placeholder, .input-container > input::placeholder {
     color: #868291;
 }
 
-.form-content-container > input:focus {
+.form-content-container > input:focus, .input-container > input::focus {
     outline: none;
     border: 1px solid #5e549c;
     box-shadow: 0px 0px 10px #afa4f7;
 }
 
+/* x inside of the input */
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-container input {
+    width: 100%;
+    padding-right: 2em;
+    box-sizing: border-box;
+}
+
+.input-container button {
+    position: absolute;
+    top: 0.6em;
+    right: 0.6em;
+    /* transform: translateX(-50%); */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    line-height: 1em;
+    color: #000;
+    padding: 0;
+    margin: 0;
+}
+
+.remove-input-button:disabled {
+    display: none;
+}
+
 .add-input-button {
     box-sizing: border-box;
     background-color: #464B73;
+    font-family: "Tac One", serif;
     color: white;
-    padding: 1vh 5vh;
-    border-radius: 0 0 10px 10px;
+    font-size: 1.5em;
+    padding: 0.3vw 2vw;
+    border-radius: 0 0 1vw 1vw;
 }
 
 .add-input-button-container {

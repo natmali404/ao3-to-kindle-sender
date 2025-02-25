@@ -55,5 +55,17 @@
   vertical-align: middle;
 }
 
+.main-button:hover {
+  background: linear-gradient(90deg, rgb(177, 163, 245) 0%, #8f7ee2 100%);
+  color: white;
+  cursor: pointer;
+}
+
+.main-button:disabled {
+  background: #929292;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
 
 

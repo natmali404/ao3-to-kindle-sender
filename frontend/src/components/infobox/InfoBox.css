@@ -1,9 +1,9 @@
 .info-box-container {
-    margin: 2vh;
+    margin: 1vw;
     position: relative;
     background-color: #464B73;
     border-radius: 30px;
-    padding: 0.5vh 10vh;
+    padding: 0.1vw 5vw;
     color: white;
     font-size: 0.8em;
 
@@ -47,12 +47,12 @@
 
 .info-box-big-text {
     font-size: 1.3em;
-    margin: 1vh;
+    margin: 0.5vw;
 }
 
 .info-box-medium-text {
     font-size: 1.1em;
-    margin: 0.1vh;
+    margin: 0.1vw;
 }
 
 ul {

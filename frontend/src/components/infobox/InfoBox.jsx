@@ -3,7 +3,7 @@ import './InfoBox.css';
 import PropTypes from "prop-types";
 
 //to add: save the info about closing the box in cache or local storage
-function InfoBox({onCloseEvent}) {
+function InfoBox({onClose}) {
 
     function copyToClipboard() {
         var copyText = document.getElementById("copy-email").textContent;
@@ -13,7 +13,7 @@ function InfoBox({onCloseEvent}) {
     return (
         <div className='info-box-container'>
             <span className="exclamation">!</span>
-            <button className="close-button" onClick={onCloseEvent}>x</button>
+            <button className="close-button" onClick={onClose}>x</button>
             <p className="info-box-big-text">To use our services, please <a className="highlighted-text" href="https://www.amazon.com/hz/mycd/myx#/home/settings/payment">authorize us in your Kindle Preferences</a>!</p>
             <p className="info-box-medium-text">Manage Your Content and Devices {'>'} Preferences {'>'} Personal Document Settings</p>
             <p className="info-box-medium-text">{'>'}  Add “<span id="copy-email" className="highlighted-text" onClick={copyToClipboard}>aoootokindlesender@gmail.com</span>” <span style={{fontStyle: 'italic'}}>(click to copy to clipboard)</span>.</p>
@@ -27,7 +27,7 @@ function InfoBox({onCloseEvent}) {
 }
 
 InfoBox.propTypes = {
-onCloseEvent: PropTypes.func.isRequired,
+onClose: PropTypes.func.isRequired,
 };
 
 export default InfoBox;
