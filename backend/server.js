@@ -30,6 +30,7 @@ const corsOptions = {
 
 const app = express();
 
+app.use(express.json()); //json parse
 app.use(cors(corsOptions))
 
 app.get("/", (request, response) => {
@@ -138,6 +139,12 @@ const removeDocument = async (filePath) => {
 }
 
 //to add: update user on status progress (websockets?)
+//to modify: process each link from given array
+
+app.post("/process", async (request, response) => {
+    console.log(request.body);
+});
+
 app.post("/execute", async (request, response) => {
     console.log("Attempting to get the download link from AO3...");
     try {
