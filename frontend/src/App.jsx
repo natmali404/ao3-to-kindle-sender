@@ -1,16 +1,14 @@
-import { useState } from 'react'
+import { useState } from "react";
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
-import './App.css'
-import Header from './components/header/Header';
-import InfoBox from './components/infobox/Infobox';
-import UserForm from './components/userform/UserForm';
+import "./App.css";
+import Header from "./components/header/Header";
+import InfoBox from "./components/infobox/Infobox";
+import UserForm from "./components/userform/UserForm";
 
 function App() {
   const [status, setStatus] = useState("");
   const [showInfoBox, setShowInfoBox] = useState(true);
-
-  //not much different from async function executeTest, but preferred in React
 
   const processTest = async (address, links) => {
     setStatus("Please wait...");
@@ -18,7 +16,7 @@ function App() {
       const response = await fetch("http://localhost:8080/process", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ kindleEmail: address, fanficLinks: links }),
       });
@@ -29,26 +27,24 @@ function App() {
       console.log(error);
       setStatus(`Error: ${error.message}`);
     }
-  }
-  
+  };
 
   return (
     <>
       <Header />
-      {/* conditional rendering wowww robi wrazenie */}
-      {showInfoBox && <InfoBox onClose={() => setShowInfoBox(false)} />} 
+      {/* conditional rendering*/}
+      {showInfoBox && <InfoBox onClose={() => setShowInfoBox(false)} />}
       <div className="card">
         <UserForm onButtonClick={processTest} />
-        {/* <button className='main-button' onClick={executeTest}>
-          Execute test send to Kindle
-        </button> */}
         <p>{status}</p>
         <p>
-          Remember, it might take up to a few minutes to process all the files and a moment for the files to appear on your Kindle! Happy reading! ʕ•ᴥ•ʔ
+          Remember, it might take up to a few minutes to process all the files
+          and a moment for the files to appear on your Kindle! Happy reading!
+          ʕ•ᴥ•ʔ
         </p>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
