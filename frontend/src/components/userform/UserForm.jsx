@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import "./UserForm.css";
 import PropTypes from "prop-types"; //necessary for vscode
 
-
-function UserForm({ onButtonClick }) {
+function UserForm({ onSubmit }) {
   const [kindleEmail, setKindleEmail] = useState("");
   const [links, setLinks] = useState([""]);
   const [emailError, setEmailError] = useState(null);
@@ -68,11 +67,13 @@ function UserForm({ onButtonClick }) {
     event.preventDefault();
     setLinks([...new Set(links)]);
     if (!emailError && !linkError) {
-      setIsProcessing(true); // Set processing to true
+      setIsProcessing(true);
+      console.log("IS PROCESSING = TRUE");
       try {
-        await onButtonClick(kindleEmail, links);
+        await onSubmit(kindleEmail, links);
       } finally {
-        setIsProcessing(false); // Set processing to false after request completes
+        setIsProcessing(false);
+        console.log("IS PROCESSING = FALSE");
       }
     }
   };
@@ -144,7 +145,7 @@ function UserForm({ onButtonClick }) {
 }
 
 UserForm.propTypes = {
-  onButtonClick: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default UserForm;

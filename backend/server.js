@@ -9,6 +9,11 @@ import path from "path";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
+import { EventEmitter } from "events";
+
+//sse configuration
+const statusEmitter = new EventEmitter();
+
 //nodemailer configuration
 dotenv.config();
 
@@ -126,10 +131,33 @@ const removeDocument = async (filePath) => {
   }
 };
 
+app.get("/status-updates", (req, res) => {
+  //sse headers
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  //res.flushHeaders(); <- ?
+
+  const sendUpdate = (update) => {
+    res.write(`data: ${JSON.stringify(update)}\n\n`);
+  };
+
+  statusEmitter.on("update", sendUpdate);
+
+  //cleanup
+  req.on("close", () => {
+    statusEmitter.off("update", sendUpdate);
+    res.end();
+  });
+});
+
 //to add: update user on status progress (websockets?)
 app.post("/process", async (request, response) => {
   console.log(request.body);
   try {
+    statusEmitter.emit("update", {
+      message: "Begin process...",
+    });
     const { kindleEmail, fanficLinks } = request.body;
     const attachments = {};
 
@@ -142,12 +170,22 @@ app.post("/process", async (request, response) => {
           "Attempting to get the download link from AO3... - fic ",
           link
         );
+        statusEmitter.emit("update", {
+          message: `Attempting to get the download URL - ${
+            processedLinkCount + errorLinkCount + 1
+          }/${totalLinkCount}...`,
+        });
         const downloadLink = await getDownloadLink(link);
         const fileName = getFileName(downloadLink);
         const downloadPath = path.join(downloadFolder, fileName);
         console.log(
           `Attempting download of ${fileName} from ${downloadLink} to ${downloadPath}...`
         );
+        statusEmitter.emit("update", {
+          message: `Attempting EPUB download - ${
+            processedLinkCount + errorLinkCount + 1
+          }/${totalLinkCount}...`,
+        });
         await downloadFile(downloadLink, downloadPath);
         attachments[fileName] = downloadPath;
         processedLinkCount++;
@@ -157,10 +195,16 @@ app.post("/process", async (request, response) => {
     }
     console.log(attachments);
     console.log("Sending email with attachments...");
+    statusEmitter.emit("update", {
+      message: "Sending email with attachments...",
+    });
 
     const emailResult = await sendEmailWithAttachment(kindleEmail, attachments);
 
     if (emailResult.success) {
+      // statusEmitter.emit("update", {
+      //   message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
+      // });
       response.json({
         message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
       });
