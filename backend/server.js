@@ -14,6 +14,8 @@ import { EventEmitter } from "events";
 //sse configuration
 const statusEmitter = new EventEmitter();
 
+const DEBUG_MODE = true;
+
 //nodemailer configuration
 dotenv.config();
 
@@ -199,20 +201,26 @@ app.post("/process", async (request, response) => {
       message: "Sending email with attachments...",
     });
 
-    const emailResult = await sendEmailWithAttachment(kindleEmail, attachments);
-
-    if (emailResult.success) {
-      // statusEmitter.emit("update", {
-      //   message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
-      // });
+    if (DEBUG_MODE) {
       response.json({
-        message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
+        message: `DEBUG=TRUE: Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
       });
     } else {
-      response
-        .status(500)
-        .json({ message: "An error occurred: " + emailResult.message });
+      const emailResult = await sendEmailWithAttachment(
+        kindleEmail,
+        attachments
+      );
+      if (emailResult.success) {
+        response.json({
+          message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
+        });
+      } else {
+        response
+          .status(500)
+          .json({ message: "An error occurred: " + emailResult.message });
+      }
     }
+
     console.log("Removing files...");
     for (const filePath of Object.values(attachments)) {
       removeDocument(filePath);
