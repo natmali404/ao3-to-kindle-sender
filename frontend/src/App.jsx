@@ -5,11 +5,14 @@ import "./App.css";
 import Header from "./components/header/Header";
 import InfoBox from "./components/infobox/Infobox";
 import UserForm from "./components/userform/UserForm";
+import HistoryPopUp from "./components/historypopup/HistoryPopUp";
 import useSSE from "./hooks/useSSE";
+import useLocalStorageState from "./hooks/useLocalStorageState";
 
 function App() {
   const [status, setStatus] = useState("");
   const [showInfoBox, setShowInfoBox] = useState(true);
+  const [linkHistory, setLinkHistory] = useLocalStorageState("linkHistory", []);
   const { data: statusUpdate } = useSSE("http://localhost:8080/status-updates");
 
   useEffect(() => {
@@ -21,6 +24,8 @@ function App() {
 
   const processTest = async (address, links) => {
     setStatus("");
+    setLinkHistory([...linkHistory, ...links]);
+    console.log(`Link history: ${linkHistory}`);
     try {
       const response = await fetch("http://localhost:8080/process", {
         method: "POST",
@@ -53,6 +58,10 @@ function App() {
           and a moment for the files to appear on your Kindle! Happy reading!
           ʕ•ᴥ•ʔ
         </p>
+        <HistoryPopUp
+          linkHistory={linkHistory}
+          clearHistory={() => setLinkHistory([])}
+        />
       </div>
     </>
   );

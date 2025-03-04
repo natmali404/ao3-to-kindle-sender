@@ -101,7 +101,7 @@ function UserForm({ onSubmit }) {
         </p>
         <div className="fic-links-container">
           {links.map((link, index) => (
-            <div className="input-container" key={link}>
+            <div className="input-container" key={index}>
               <input
                 value={link}
                 type="text"

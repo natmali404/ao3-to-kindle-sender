@@ -77,6 +77,9 @@ const getFileName = (downloadLink) => {
 };
 
 const downloadFile = async (downloadLink, downloadPath) => {
+  if (!fs.existsSync(downloadPath)) {
+    fs.mkdirSync(downloadPath);
+  }
   const writer = fs.createWriteStream(downloadPath);
   const response = await axios({
     url: downloadLink,
@@ -202,6 +205,7 @@ app.post("/process", async (request, response) => {
     });
 
     if (DEBUG_MODE) {
+      console.log("DEBUG=TRUE: MAIL SENT.");
       response.json({
         message: `DEBUG=TRUE: Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
       });
