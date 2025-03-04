@@ -1,34 +1,16 @@
 import express from "express";
 import cors from "cors";
 
-import axios from "axios";
-import * as cheerio from "cheerio";
-import fs from "fs";
-import path from "path";
-
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-
 import { EventEmitter } from "events";
+
+import { removeDocument } from "./services/fileServices.js";
+import { getDownloadLink, downloadFile } from "./services/downloadServices.js";
+import { sendEmailWithAttachment } from "./services/mailServices.js";
 
 //sse configuration
 const statusEmitter = new EventEmitter();
 
 const DEBUG_MODE = true;
-
-//nodemailer configuration
-dotenv.config();
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 //cors configuration
 const corsOptions = {
@@ -43,113 +25,6 @@ app.use(cors(corsOptions));
 app.get("/", (request, response) => {
   response.json({ statusMessage: "App is running!" });
 });
-
-const downloadFolder = path.join(path.resolve(), "downloads");
-
-const MAX_RETRIES = 3; //for HTTP 525
-const RETRY_DELAY = 2000;
-
-const getDownloadLink = async (url) => {
-  const headers = {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    Accept:
-      "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    Connection: "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    TE: "Trailers",
-  };
-
-  try {
-    const { data } = await axios.get(url, { headers });
-    const $ = cheerio.load(data);
-    const epubLink = $("a[href*='.epub']").attr("href");
-
-    if (!epubLink) {
-      throw new Error(".epub link not found on the page!");
-    }
-
-    console.log("Download link found: ", epubLink);
-    return "https://archiveofourown.org" + epubLink;
-  } catch (error) {
-    if (error.response && error.response.status === 525 && retries > 0) {
-      console.log(
-        `HTTP 525 error. Retrying... (${
-          MAX_RETRIES - retries + 1
-        }/${MAX_RETRIES})`
-      );
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-      return getDownloadLink(url, retries - 1);
-    }
-  }
-  console.error("Error getting download link: ", error.message);
-  throw error;
-};
-
-const getFileName = (downloadLink) => {
-  return downloadLink.split("/").pop().split("?")[0];
-};
-
-const downloadFile = async (downloadLink, downloadPath) => {
-  if (!fs.existsSync(downloadPath)) {
-    fs.mkdirSync(downloadPath);
-  }
-  const writer = fs.createWriteStream(downloadPath);
-  const response = await axios({
-    url: downloadLink,
-    method: "GET",
-    responseType: "stream",
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      Accept: "application/octet-stream",
-      Connection: "keep-alive",
-    },
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
-  });
-  response.data.pipe(writer);
-
-  return new Promise((resolve, reject) => {
-    writer.on("finish", resolve);
-    writer.on("error", reject);
-  });
-};
-
-const sendEmailWithAttachment = async (recipientEmail, attachments) => {
-  const attachmentsObject = Object.entries(attachments).map(
-    ([fileName, filePath]) => ({
-      //should there be a try?
-      filename: fileName,
-      path: filePath,
-    })
-  );
-  try {
-    const info = await transporter.sendMail({
-      to: recipientEmail,
-      subject: "AO3 to Kindle sender",
-      text: "Successful mail, enjoy reading!!",
-      attachments: attachmentsObject,
-    });
-    console.log("Email sent: ", info.response);
-    return { success: true, message: "Email sent successfully!" };
-  } catch (error) {
-    console.log("Error sending email: ", error);
-    return { success: false, message: error.message };
-  }
-};
-
-const fsPromises = fs.promises;
-
-const removeDocument = async (filePath) => {
-  try {
-    await fsPromises.unlink(filePath);
-    console.log("File removed from the server.");
-  } catch (error) {
-    console.error("Error removing file:", error);
-  }
-};
 
 app.get("/status-updates", (req, res) => {
   //sse headers
