@@ -10,3 +10,5 @@ const removeDocument = async (filePath) => {
     console.error("Error removing file:", error);
   }
 };
+
+export { removeDocument };

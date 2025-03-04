@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendEmailWithAttachment = async (recipientEmail, attachments) => {
+const sendEmailWithAttachments = async (recipientEmail, attachments) => {
   const attachmentsObject = Object.entries(attachments).map(
     ([fileName, filePath]) => ({
       //should there be a try?
@@ -33,3 +33,5 @@ const sendEmailWithAttachment = async (recipientEmail, attachments) => {
     return { success: false, message: error.message };
   }
 };
+
+export { sendEmailWithAttachments };

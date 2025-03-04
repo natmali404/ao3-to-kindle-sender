@@ -4,8 +4,12 @@ import cors from "cors";
 import { EventEmitter } from "events";
 
 import { removeDocument } from "./services/fileServices.js";
-import { getDownloadLink, downloadFile } from "./services/downloadServices.js";
-import { sendEmailWithAttachment } from "./services/mailServices.js";
+import {
+  getDownloadLink,
+  downloadFile,
+  getFileName,
+} from "./services/downloadServices.js";
+import { sendEmailWithAttachments } from "./services/mailServices.js";
 
 //sse configuration
 const statusEmitter = new EventEmitter();
@@ -100,7 +104,7 @@ app.post("/process", async (request, response) => {
         message: `DEBUG=TRUE: Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
       });
     } else {
-      const emailResult = await sendEmailWithAttachment(
+      const emailResult = await sendEmailWithAttachments(
         kindleEmail,
         attachments
       );

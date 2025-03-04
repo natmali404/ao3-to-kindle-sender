@@ -50,8 +50,8 @@ const getDownloadLink = async (url) => {
 };
 
 const downloadFile = async (downloadLink, downloadPath) => {
-  if (!fs.existsSync(downloadPath)) {
-    fs.mkdirSync(downloadPath);
+  if (!fs.existsSync(downloadFolder)) {
+    fs.mkdirSync(downloadFolder);
   }
   const writer = fs.createWriteStream(downloadPath);
   const response = await axios({
@@ -74,3 +74,5 @@ const downloadFile = async (downloadLink, downloadPath) => {
     writer.on("error", reject);
   });
 };
+
+export { downloadFile, getDownloadLink, getFileName };
