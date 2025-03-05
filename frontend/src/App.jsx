@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 // import viteLogo from '/vite.svg'
 import "./App.css";
 import Header from "./components/header/Header";
-import InfoBox from "./components/infobox/Infobox";
+import InfoBox from "./components/infobox/InfoBox";
 import UserForm from "./components/userform/UserForm";
 import HistoryPopUp from "./components/historypopup/HistoryPopUp";
 import useSSE from "./hooks/useSSE";
