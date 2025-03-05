@@ -121,7 +121,7 @@ app.post("/process", async (request, response) => {
       message: "Sending email with attachments...",
     });
 
-    if (DEBUG_MODE) {
+    if (DEBUG_MODE == "true") {
       console.log("DEBUG=TRUE: MAIL SENT.");
       response.json({
         message: `DEBUG=TRUE: Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
