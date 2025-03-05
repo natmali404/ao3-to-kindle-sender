@@ -57,7 +57,7 @@ const getDownloadLink = async (url, retries = MAX_RETRIES) => {
   }
 };
 
-const downloadFile = async (downloadLink) => {
+const downloadFile = async (downloadLink, retries = MAX_RETRIES) => {
   const fileName = getFileName(downloadLink);
   const downloadPath = path.join(DOWNLOAD_FOLDER, fileName);
   console.log(
@@ -66,21 +66,35 @@ const downloadFile = async (downloadLink) => {
   if (!fs.existsSync(DOWNLOAD_FOLDER)) {
     fs.mkdirSync(DOWNLOAD_FOLDER);
   }
-  const writer = fs.createWriteStream(downloadPath);
-  const response = await axios({
-    url: downloadLink,
-    method: "GET",
-    responseType: "stream",
-    headers: DOWNLOAD_HEADERS,
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
-  });
-  response.data.pipe(writer);
+  try {
+    const writer = fs.createWriteStream(downloadPath);
+    const response = await axios({
+      url: downloadLink,
+      method: "GET",
+      responseType: "stream",
+      headers: DOWNLOAD_HEADERS,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+    response.data.pipe(writer);
 
-  return new Promise((resolve, reject) => {
-    writer.on("finish", () => resolve({ fileName, downloadPath }));
-    writer.on("error", reject);
-  });
+    return new Promise((resolve, reject) => {
+      writer.on("finish", () => resolve({ fileName, downloadPath }));
+      writer.on("error", reject);
+    });
+  } catch (error) {
+    if (error.response && error.response.status === 525 && retries > 0) {
+      console.log(
+        `HTTP 525 error. Retrying... (${
+          MAX_RETRIES - retries + 1
+        }/${MAX_RETRIES})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+      return downloadFile(downloadLink, retries - 1); //this could be optimized (things outside try are unnecessarily executed on every try)
+    }
+    console.error("Error downloading the file:", error.message);
+    throw error;
+  }
 };
 
 export { downloadFile, getDownloadLink, getFileName };
