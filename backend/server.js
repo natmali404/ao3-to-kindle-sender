@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 
 import { EventEmitter } from "events";
 
@@ -75,20 +76,17 @@ app.post("/process", async (request, response) => {
           }/${totalLinkCount}...`,
         });
         const downloadLink = await getDownloadLink(link);
-        const fileName = getFileName(downloadLink);
-        const downloadPath = path.join(downloadFolder, fileName);
-        console.log(
-          `Attempting download of ${fileName} from ${downloadLink} to ${downloadPath}...`
-        );
+        // const downloadPath = path.join(downloadFolder, fileName);
         statusEmitter.emit("update", {
           message: `Attempting EPUB download - ${
             processedLinkCount + errorLinkCount + 1
           }/${totalLinkCount}...`,
         });
-        await downloadFile(downloadLink, downloadPath);
+        const { fileName, downloadPath } = await downloadFile(downloadLink);
         attachments[fileName] = downloadPath;
         processedLinkCount++;
       } catch (error) {
+        console.log(error);
         errorLinkCount++;
       }
     }

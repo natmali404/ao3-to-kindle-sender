@@ -17,6 +17,7 @@ function InfoBox({ onClose }) {
       <p className="info-box-big-text">
         To use our services, please{" "}
         <a
+          target="_blank"
           className="highlighted-text"
           href="https://www.amazon.com/hz/mycd/myx#/home/settings/payment"
         >
