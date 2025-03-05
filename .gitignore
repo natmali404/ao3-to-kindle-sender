@@ -25,6 +25,8 @@ dist-ssr
 
 # Environment variables files
 .env
+.env.development
+.env.production
 
 # Downloaded temporary files
 backend/downloads/

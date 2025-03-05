@@ -9,11 +9,13 @@ import HistoryPopUp from "./components/historypopup/HistoryPopUp";
 import useSSE from "./hooks/useSSE";
 import useLocalStorageState from "./hooks/useLocalStorageState";
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 function App() {
   const [status, setStatus] = useState("");
   const [showInfoBox, setShowInfoBox] = useState(true);
   const [linkHistory, setLinkHistory] = useLocalStorageState("linkHistory", []);
-  const { data: statusUpdate } = useSSE("http://localhost:8080/status-updates");
+  const { data: statusUpdate } = useSSE(`${apiUrl}/status-updates`);
 
   useEffect(() => {
     if (statusUpdate) {
@@ -27,7 +29,7 @@ function App() {
     setLinkHistory([...linkHistory, ...links]);
     console.log(`Link history: ${linkHistory}`);
     try {
-      const response = await fetch("http://localhost:8080/process", {
+      const response = await fetch(`${apiUrl}/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
