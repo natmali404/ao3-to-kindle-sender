@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import rateLimit from "express-rate-limit";
+import dotenv from "dotenv";
 
 import { EventEmitter } from "events";
 
@@ -11,18 +13,32 @@ import {
   getFileName,
 } from "./services/downloadServices.js";
 import { sendEmailWithAttachments } from "./services/mailServices.js";
+import { validateEmail, validateLink } from "./services/validationServices.js";
+
+dotenv.config();
 
 //sse configuration
 const statusEmitter = new EventEmitter();
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = process.env.DEBUG;
 
 //cors configuration
+// const corsOptions = {
+//   origin: ["http://localhost:5173"],
+// };
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: process.env.ALLOWED_ORIGINS.split(","),
 };
 
 const app = express();
+
+//rate limiter
+const limiter = rateLimit({
+  //100 requests per 15mins
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
 
 app.use(express.json()); //json parse
 app.use(cors(corsOptions));
@@ -53,17 +69,26 @@ app.get("/status-updates", (req, res) => {
 
 //to add: update user on status progress (websockets?)
 app.post("/process", async (request, response) => {
+  console.log(`Debug mode: ${DEBUG_MODE}`);
   console.log(request.body);
   try {
     statusEmitter.emit("update", {
       message: "Begin process...",
     });
     const { kindleEmail, fanficLinks } = request.body;
+
+    validateEmail(kindleEmail);
+
+    for (const link of fanficLinks) {
+      validateLink(link);
+    }
+
     const attachments = {};
 
     const totalLinkCount = fanficLinks.length;
     let processedLinkCount = 0;
     let errorLinkCount = 0;
+
     for (const link of fanficLinks) {
       try {
         console.log(
@@ -76,7 +101,6 @@ app.post("/process", async (request, response) => {
           }/${totalLinkCount}...`,
         });
         const downloadLink = await getDownloadLink(link);
-        // const downloadPath = path.join(downloadFolder, fileName);
         statusEmitter.emit("update", {
           message: `Attempting EPUB download - ${
             processedLinkCount + errorLinkCount + 1
@@ -90,6 +114,7 @@ app.post("/process", async (request, response) => {
         errorLinkCount++;
       }
     }
+
     console.log(attachments);
     console.log("Sending email with attachments...");
     statusEmitter.emit("update", {
