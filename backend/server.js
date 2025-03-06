@@ -33,7 +33,7 @@ const corsOptions = {
 const app = express();
 
 //rate limiter
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 const limiter = rateLimit({
   //100 requests per 15mins
   windowMs: 15 * 60 * 1000,
