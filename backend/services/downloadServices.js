@@ -79,15 +79,20 @@ const downloadFile = async (downloadLink, retries = MAX_RETRIES) => {
     response.data.pipe(writer);
 
     return new Promise((resolve, reject) => {
-      writer.on("finish", () => resolve({ fileName, downloadPath }));
+      writer.on("finish", () => {
+        console.log("Download successful!");
+        resolve({ fileName, downloadPath });
+      });
       writer.on("error", reject);
     });
   } catch (error) {
-    if (error.response && error.response.status === 525 && retries > 0) {
+    if (
+      error.response &&
+      (error.response.status === 525 || error.response.status === 503) &&
+      retries > 0
+    ) {
       console.log(
-        `HTTP 525 error. Retrying... (${
-          MAX_RETRIES - retries + 1
-        }/${MAX_RETRIES})`
+        `HTTP error. Retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`
       );
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
       return downloadFile(downloadLink, retries - 1); //this could be optimized (things outside try are unnecessarily executed on every try)

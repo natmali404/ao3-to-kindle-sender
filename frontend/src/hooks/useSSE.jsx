@@ -6,9 +6,13 @@ function useSSE(url) {
   useEffect(() => {
     const eventSource = new EventSource(url);
 
+    eventSource.onopen = () => {
+      // console.log("SSE connection opened");
+    };
+
     eventSource.onmessage = (event) => {
       const newData = JSON.parse(event.data);
-      console.log(newData);
+      // console.log("SSE message received:", newData);
       setData(newData.message);
     };
 

@@ -67,7 +67,7 @@ app.get("/status-updates/:id", (req, res) => {
 
   const sendUpdate = (update) => {
     if (update.id === req.query.id) {
-      res.write(JSON.stringify(update));
+      res.write(`data: ${JSON.stringify(update)}\n\n`);
     }
   };
 

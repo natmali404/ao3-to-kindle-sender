@@ -23,7 +23,7 @@ function App() {
   useEffect(() => {
     if (statusUpdate) {
       // console.log(`Status update: ${statusUpdate.message}`);
-      setStatus(statusUpdate.message);
+      setStatus(statusUpdate);
     }
   }, [statusUpdate]);
 
