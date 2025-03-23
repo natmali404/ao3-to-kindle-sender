@@ -17,15 +17,9 @@ import { validateEmail, validateLink } from "./services/validationServices.js";
 
 dotenv.config();
 
-//sse configuration
-const statusEmitter = new EventEmitter();
-
 const DEBUG_MODE = process.env.DEBUG;
 
 //cors configuration
-// const corsOptions = {
-//   origin: ["http://localhost:5173"],
-// };
 const corsOptions = {
   origin: process.env.ALLOWED_ORIGINS.split(","),
 };
@@ -48,7 +42,23 @@ app.get("/", (request, response) => {
   response.json({ statusMessage: "App is running!" });
 });
 
-app.get("/status-updates", (req, res) => {
+//sse configuration
+const userEmitters = new Map();
+
+const createUserEmitter = (userId) => {
+  userEmitters.set(userId, new EventEmitter());
+  console.log(`User id generated: ${userId}`);
+};
+
+app.get("/status-updates/:id", (req, res) => {
+  const userId = req.params.id;
+
+  if (!userEmitters.has(userId)) {
+    createUserEmitter(userId);
+  }
+
+  const userEmitter = userEmitters.get(userId);
+
   //sse headers
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -56,39 +66,47 @@ app.get("/status-updates", (req, res) => {
   //res.flushHeaders(); <- ?
 
   const sendUpdate = (update) => {
-    res.write(`data: ${JSON.stringify(update)}\n\n`);
+    if (update.id === req.query.id) {
+      res.write(JSON.stringify(update));
+    }
   };
 
-  statusEmitter.on("update", sendUpdate);
+  userEmitter.on("update", sendUpdate);
 
   //cleanup
   req.on("close", () => {
-    statusEmitter.off("update", sendUpdate);
+    userEmitter.off("update", sendUpdate);
+    userEmitters.delete(userId);
     res.end();
   });
 });
 
-//to add: update user on status progress (websockets?)
 app.post("/process", async (request, response) => {
   console.log(`Debug mode: ${DEBUG_MODE}`);
   console.log(request.body);
+
   try {
-    statusEmitter.emit("update", {
-      message: "Begin process...",
-    });
-    const { kindleEmail, fanficLinks } = request.body;
+    const { kindleEmail, fanficLinks, userId } = request.body;
 
     validateEmail(kindleEmail);
-
     for (const link of fanficLinks) {
       validateLink(link);
     }
 
     const attachments = {};
-
     const totalLinkCount = fanficLinks.length;
     let processedLinkCount = 0;
     let errorLinkCount = 0;
+
+    if (!userEmitters.has(userId)) {
+      createUserEmitter(userId);
+    }
+
+    const userEmitter = userEmitters.get(userId);
+
+    userEmitter.emit("update", {
+      message: "Begin process...",
+    });
 
     for (const link of fanficLinks) {
       try {
@@ -96,13 +114,13 @@ app.post("/process", async (request, response) => {
           "Attempting to get the download link from AO3... - fic ",
           link
         );
-        statusEmitter.emit("update", {
+        userEmitter.emit("update", {
           message: `Attempting to get the download URL - ${
             processedLinkCount + errorLinkCount + 1
           }/${totalLinkCount}...`,
         });
         const downloadLink = await getDownloadLink(link);
-        statusEmitter.emit("update", {
+        userEmitter.emit("update", {
           message: `Attempting EPUB download - ${
             processedLinkCount + errorLinkCount + 1
           }/${totalLinkCount}...`,
@@ -118,7 +136,7 @@ app.post("/process", async (request, response) => {
 
     console.log(attachments);
     console.log("Sending email with attachments...");
-    statusEmitter.emit("update", {
+    userEmitter.emit("update", {
       message: "Sending email with attachments...",
     });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import "./App.css";
@@ -15,16 +16,17 @@ function App() {
   const [status, setStatus] = useState("");
   const [showInfoBox, setShowInfoBox] = useState(true);
   const [linkHistory, setLinkHistory] = useLocalStorageState("linkHistory", []);
-  const { data: statusUpdate } = useSSE(`${apiUrl}/status-updates`);
+  const [userId, setUserId] = useState(uuidv4());
+  const { data: statusUpdate } = useSSE(`${apiUrl}/status-updates/${userId}`);
 
   useEffect(() => {
     if (statusUpdate) {
-      console.log(`Status update: ${statusUpdate}`);
-      setStatus(statusUpdate);
+      console.log(`Status update: ${statusUpdate.message}`);
+      setStatus(statusUpdate.message);
     }
   }, [statusUpdate]);
 
-  const processTest = async (address, links) => {
+  const processLinks = async (address, links) => {
     setStatus("");
     setLinkHistory([...linkHistory, ...links]);
     console.log(`Link history: ${linkHistory}`);
@@ -34,7 +36,11 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ kindleEmail: address, fanficLinks: links }),
+        body: JSON.stringify({
+          kindleEmail: address,
+          fanficLinks: links,
+          userId: userId,
+        }),
       });
 
       const data = await response.json();
@@ -52,7 +58,7 @@ function App() {
       {/* conditional rendering*/}
       {showInfoBox && <InfoBox onClose={() => setShowInfoBox(false)} />}
       <div className="card">
-        <UserForm onSubmit={processTest} />
+        <UserForm onSubmit={processLinks} />
         <p>{status ? status : ""}</p>
 
         <p>

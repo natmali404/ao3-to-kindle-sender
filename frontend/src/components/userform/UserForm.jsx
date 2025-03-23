@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./UserForm.css";
 import PropTypes from "prop-types"; //necessary for vscode
 
@@ -77,13 +77,6 @@ function UserForm({ onSubmit }) {
       }
     }
   };
-
-  //i suppose because of this validation happens twice (from dependency array AND from the onChange events)?
-  //if i skip the dependency array on purpose will it fix this issue?
-  useEffect(() => {
-    validateEmail(kindleEmail);
-    links.forEach((link) => validateLink(link));
-  }); //remove this and use useState for button. useEffect for e.g. localStorage
 
   return (
     <form onSubmit={handleSubmit}>
