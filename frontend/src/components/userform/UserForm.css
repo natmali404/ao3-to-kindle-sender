@@ -1,105 +1,140 @@
 form {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
 }
 
 .form-content-container > p {
-    margin: 0.3vw;
+  margin: 0.2vw;
 }
 
-.form-content-container > input, .input-container > input {
-    box-sizing: border-box;
-    background-color: white;
-    border-radius: 10px;
-    border: 1px solid black;
-    padding: 0.6vw;
-    color: #201e22;
-    width: 100%;
-    margin-bottom: 1vw;
+.form-content-container > input,
+.input-container > input {
+  box-sizing: border-box;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid black;
+  padding: 0.5vw;
+  color: #201e22;
+  width: 100%;
+  margin-bottom: 0.8vw;
 }
 
 .fic-links-container .input-container:last-child input {
-    border-radius: 10px 10px 0 10px;
-    margin-bottom: 0.2vw;
+  border-radius: 8px 8px 0 8px;
+  margin-bottom: 0.1vw;
 }
 
-.form-content-container > input::placeholder, .input-container > input::placeholder {
-    color: #868291;
+.form-content-container > input::placeholder,
+.input-container > input::placeholder {
+  color: #868291;
 }
 
-.form-content-container > input:focus, .input-container > input:focus {
-    outline: none;
-    border: 1px solid #5e549c;
-    box-shadow: 0px 0px 10px #afa4f7;
+.form-content-container > input:focus,
+.input-container > input:focus {
+  outline: none;
+  border: 1px solid #5e549c;
+  box-shadow: 0px 0px 8px #afa4f7;
 }
 
-/* x inside of the input */
 .input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .input-container input {
-    width: 100%;
-    padding-right: 2em;
-    box-sizing: border-box;
+  width: 100%;
+  padding-right: 1.5em;
+  box-sizing: border-box;
 }
 
 .input-container button {
-    position: absolute;
-    top: 0.6em;
-    right: 0.6em;
-    /* transform: translateX(-50%); */
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    line-height: 1em;
-    color: #000;
-    padding: 0;
-    margin: 0;
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1em;
+  color: #000;
+  padding: 0;
+  margin: 0;
 }
 
 .remove-input-button:disabled {
-    display: none;
+  display: none;
 }
 
 .add-input-button {
-    box-sizing: border-box;
-    background-color: #464B73;
-    font-family: "Tac One", serif;
-    color: white;
-    font-size: 1.5em;
-    padding: 0.3vw 2vw;
-    border-radius: 0 0 1vw 1vw;
-    border: none;
+  box-sizing: border-box;
+  background-color: #464b73;
+  font-family: "Tac One", serif;
+  color: white;
+  font-size: 1.2em;
+  padding: 0.2vw 1.5vw;
+  border-radius: 0 0 0.8vw 0.8vw;
+  border: none;
 }
 
 .add-input-button:hover {
-    background-color: #686e99;
-    cursor: pointer;
+  background-color: #686e99;
+  cursor: pointer;
 }
 
 .add-input-button:disabled {
-    background-color: #6b6b6b;
-    cursor: not-allowed;
+  background-color: #6b6b6b;
+  cursor: not-allowed;
 }
 
 .add-input-button-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-bottom: 1vw;
-    /* align-items: right;
-    justify-content: right; */
-    
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-bottom: 0.8vw;
 }
 
 .error-status {
-    font-size: 0.8em;
-    color: #414141;
-    font-style: italic;
+  font-size: 0.7em;
+  color: #414141;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .form-content-container > p {
+    margin: 0.1vw;
+  }
+
+  .form-content-container > input,
+  .input-container > input {
+    padding: 1vw;
+    margin-bottom: 0.5vw;
+    font-size: 0.75em;
+  }
+
+  .fic-links-container .input-container:last-child input {
+    margin-bottom: 0.05vw;
+  }
+
+  .input-container button {
+    top: 0.3em;
+    right: 0.3em;
+    font-size: 0.9em;
+  }
+
+  .add-input-button {
+    font-size: 1em;
+    padding: 0.1vw 3vw;
+    border-radius: 0 0 1.5vw 1.5vw;
+  }
+
+  .add-input-button-container {
+    margin-bottom: 0.5vw;
+  }
+
+  .error-status {
+    font-size: 0.6em;
+  }
 }

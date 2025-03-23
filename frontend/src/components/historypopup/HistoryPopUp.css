@@ -3,3 +3,12 @@
   overflow-y: auto;
   border: 1px solid black;
 }
+
+@media (max-width: 768px) {
+  .popup-content {
+    width: 90%;
+  }
+  .scrollable-panel {
+    font-size: 0.9em;
+  }
+}

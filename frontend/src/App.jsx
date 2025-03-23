@@ -21,7 +21,7 @@ function App() {
 
   useEffect(() => {
     if (statusUpdate) {
-      console.log(`Status update: ${statusUpdate.message}`);
+      // console.log(`Status update: ${statusUpdate.message}`);
       setStatus(statusUpdate.message);
     }
   }, [statusUpdate]);
@@ -29,7 +29,7 @@ function App() {
   const processLinks = async (address, links) => {
     setStatus("");
     setLinkHistory([...linkHistory, ...links]);
-    console.log(`Link history: ${linkHistory}`);
+    // console.log(`Link history: ${linkHistory}`);
     try {
       const response = await fetch(`${apiUrl}/process`, {
         method: "POST",
@@ -44,10 +44,10 @@ function App() {
       });
 
       const data = await response.json();
-      console.log(data.message);
+      // console.log(data.message);
       setStatus(data.message);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       setStatus(`Error: ${error.message}`);
     }
   };
