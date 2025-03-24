@@ -97,6 +97,7 @@ app.post("/process", async (request, response) => {
     const totalLinkCount = fanficLinks.length;
     let processedLinkCount = 0;
     let errorLinkCount = 0;
+    const failedLinks = [];
 
     if (!userEmitters.has(userId)) {
       createUserEmitter(userId);
@@ -131,6 +132,7 @@ app.post("/process", async (request, response) => {
       } catch (error) {
         console.log(error);
         errorLinkCount++;
+        failedLinks.push(link);
       }
     }
 
@@ -144,6 +146,7 @@ app.post("/process", async (request, response) => {
       console.log("DEBUG=TRUE: MAIL SENT.");
       response.json({
         message: `DEBUG=TRUE: Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
+        failedLinks: failedLinks,
       });
     } else {
       const emailResult = await sendEmailWithAttachments(
@@ -153,6 +156,7 @@ app.post("/process", async (request, response) => {
       if (emailResult.success) {
         response.json({
           message: `Processed files: ${totalLinkCount}. Files downloaded and sent successfully: ${processedLinkCount}. Failures: ${errorLinkCount}.`,
+          failedLinks: failedLinks,
         });
       } else {
         response

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Analytics } from "@vercel/analytics/react";
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
 import "./App.css";
 import Header from "./components/header/Header";
 import InfoBox from "./components/infobox/InfoBox";
@@ -46,7 +44,13 @@ function App() {
 
       const data = await response.json();
       // console.log(data.message);
-      setStatus(data.message);
+      if (data.failedLinks && data.failedLinks.length > 0) {
+        setStatus(
+          `${data.message} Failed links: ${data.failedLinks.join(", ")}`
+        );
+      } else {
+        setStatus(data.message);
+      }
     } catch (error) {
       // console.log(error);
       setStatus(`Error: ${error.message}`);
@@ -65,9 +69,13 @@ function App() {
 
         <p>
           Remember, it might take up to a few minutes to process all the files
-          and a moment for the files to appear on your Kindle! Happy reading!
-          ʕ•ᴥ•ʔ
+          and a moment for the files to appear on your Kindle!
         </p>
+        <p>
+          Sometimes, AO3 cannot handle many requests. In case of a failure, just
+          try again!
+        </p>
+        <p>Happy reading! ʕ•ᴥ•ʔ</p>
         <HistoryPopUp
           linkHistory={linkHistory}
           clearHistory={() => setLinkHistory([])}

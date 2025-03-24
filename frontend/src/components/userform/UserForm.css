@@ -68,6 +68,11 @@ form {
   display: none;
 }
 
+.blocked-button {
+  background: none;
+  background-color: rgb(212, 218, 223);
+}
+
 .add-input-button {
   box-sizing: border-box;
   background-color: #464b73;

@@ -125,7 +125,7 @@ function UserForm({ onSubmit }) {
         <button
           disabled={emailError || linkError || isProcessing}
           type="submit"
-          className="main-button"
+          className={`main-button ${isProcessing ? "blocked-button" : ""}`}
         >
           {isProcessing ? "Processing..." : "Process links"}
         </button>

@@ -1,10 +1,11 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { errorMonitor } from "events";
 import fs from "fs";
 import path from "path";
 
 const DOWNLOAD_FOLDER = path.join(path.resolve(), "downloads");
-const MAX_RETRIES = 3; //for HTTP 525
+const MAX_RETRIES = 5; //for HTTP error
 const RETRY_DELAY = 2000;
 
 const SCRAPING_HEADERS = {
@@ -42,9 +43,9 @@ const getDownloadLink = async (url, retries = MAX_RETRIES) => {
     console.log("Download link found:", epubLink);
     return "https://archiveofourown.org" + epubLink;
   } catch (error) {
-    if (error.response && error.response.status === 525 && retries > 0) {
+    if (error.response && retries > 0) {
       console.log(
-        `HTTP 525 error. Retrying... (${
+        `HTTP ${error.response.status} error. Retrying... (${
           MAX_RETRIES - retries + 1
         }/${MAX_RETRIES})`
       );
@@ -86,13 +87,11 @@ const downloadFile = async (downloadLink, retries = MAX_RETRIES) => {
       writer.on("error", reject);
     });
   } catch (error) {
-    if (
-      error.response &&
-      (error.response.status === 525 || error.response.status === 503) &&
-      retries > 0
-    ) {
+    if (error.response && retries > 0) {
       console.log(
-        `HTTP error. Retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`
+        `HTTP ${error.response.status} error. Retrying... (${
+          MAX_RETRIES - retries + 1
+        }/${MAX_RETRIES})`
       );
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
       return downloadFile(downloadLink, retries - 1); //this could be optimized (things outside try are unnecessarily executed on every try)
